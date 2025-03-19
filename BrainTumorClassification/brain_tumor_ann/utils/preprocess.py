@@ -1,10 +1,10 @@
 import os
 import numpy as np
 import cv2
-from keras.src.legacy.preprocessing.image import ImageDataGenerator
 from sklearn.model_selection import train_test_split
 import tensorflow as ts
 to_categorical = ts.keras.utils.to_categorical
+import random
 
 
 # def load_data(dataset_path, img_size=128):
@@ -28,58 +28,52 @@ to_categorical = ts.keras.utils.to_categorical
 #
 #     return train_test_split(data, labels, test_size=0.2, random_state=42)
 
-# Veri setinin konumu
-DATASET_PATH = "dataset/Training/"
-CATEGORIES = ["no_tumor", "glioma_tumor", "meningioma_tumor", "pituitary_tumor"]
+# Gürültü ekleme fonksiyonu (ANN için uygun)
+def add_noise(image):
+    noise = np.random.randint(0, 30, image.shape, dtype='uint8')
+    return np.clip(image + noise, 0, 255)
 
-# Veri artırma (Data Augmentation) işlemleri
-data_generator = ImageDataGenerator(
-    rotation_range=20,
-    width_shift_range=0.2,
-    height_shift_range=0.2,
-    zoom_range=0.2,
-    horizontal_flip=True,
-    fill_mode='nearest'
-)
 
-def load_data():
-    data, labels = [], []
+# Parlaklık değiştirme fonksiyonu (ANN için uygun)
+def change_brightness(image):
+    factor = random.uniform(0.7, 1.3)
+    return np.clip(image * factor, 0, 255).astype(np.uint8)
 
-    for i, category in enumerate(CATEGORIES):
-        folder_path = os.path.join(DATASET_PATH, category)
+
+# ANN için uygun veri yükleme fonksiyonu
+def load_data(dataset_path, img_size=128, augment_factor=2):
+    categories = ["no_tumor", "glioma_tumor", "meningioma_tumor", "pituitary_tumor"]
+    data = []
+    labels = []
+
+    for i, category in enumerate(categories):
+        folder_path = os.path.join(dataset_path, category)
         for image_name in os.listdir(folder_path):
             image_path = os.path.join(folder_path, image_name)
             image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-            image = cv2.resize(image, (128, 128))  # 128x128 boyutuna getir
+            image = cv2.resize(image, (img_size, img_size))
 
-            # Orijinal görüntüyü ekle
-            data.append(image)
+            # Orijinal görüntüyü ekle (1D vektör olarak)
+            data.append(image.flatten())
             labels.append(i)
 
-            # **Veri artırma işlemi burada uygulanıyor**
-            image = np.expand_dims(image, axis=-1)  # (128,128) -> (128,128,1)
-            image = np.expand_dims(image, axis=0)  # (128,128,1) -> (1,128,128,1)
+            # Veri artırma işlemleri
+            for _ in range(augment_factor):
+                if random.random() > 0.5:  # %50 olasılıkla parlaklık değişimi
+                    augmented_image = change_brightness(image)
+                else:  # %50 olasılıkla gürültü ekleme
+                    augmented_image = add_noise(image)
 
-            # 3 tane yeni görüntü üret
-            aug_iter = data_generator.flow(image, batch_size=1)
-            for _ in range(3):  # 3 yeni veri oluştur
-                aug_image = next(aug_iter)[0].astype(np.uint8)
-                aug_image = aug_image.squeeze()  # Tekrar (128,128) hale getir
-                data.append(aug_image)
+                data.append(augmented_image.flatten())  # ANN için düzleştirme
                 labels.append(i)
 
-    # Dizilere çevir ve normalize et (0-1 arasına getir)
-    data = np.array(data) / 255.0
+    data = np.array(data) / 255.0  # Normalizasyon (0-1 aralığı)
     labels = np.array(labels)
 
-    # One-hot encoding
-    labels = to_categorical(labels, num_classes=len(CATEGORIES))
+    labels = to_categorical(labels, num_classes=4)  # One-hot encoding
 
-    # Eğitim ve test olarak böl
-    X_train, X_test, y_train, y_test = train_test_split(data, labels, test_size=0.2, random_state=42)
+    return train_test_split(data, labels, test_size=0.2, random_state=42)
 
-    # Modelin kabul etmesi için şekil değiştir
-    X_train = X_train.reshape(-1, 128*128)  # ANN için düzleştirildi
-    X_test = X_test.reshape(-1, 128*128)    # ANN için düzleştirildi
 
-    return X_train, X_test, y_train, y_test
+
+
