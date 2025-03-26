@@ -38,8 +38,6 @@ model.save("brain_tumor_ann.h5")
 print("Model kaydedildi: brain_tumor_ann.h5")
 
 
-
-
 # import os  # (Dosya ve klasör işlemleri için)
 # Matris işlemleri ve matematiksel hesaplamalar, Veri normalizasyonu, istatistiksel işlemler gibi işlemler.
 # import numpy as np
@@ -48,55 +46,3 @@ print("Model kaydedildi: brain_tumor_ann.h5")
 # Modelin gerçek dünyada nasıl performans gösterdiğini ölçmek için verinin bir kısmını model eğitimi dışında tutar.
 # import tensorflow as tf
 # to_categorical = tf.keras.utils.to_categorical
-
-#
-# import matplotlib.pyplot as plt
-# from models.model import create_model
-# from utils.preprocess import load_data
-#
-# # Veriyi yükle
-# train_data_path = "dataset/Training/"
-# X_train, X_test, y_train, y_test = load_data(train_data_path)
-#
-# # Modeli oluştur
-# input_shape = X_train.shape[1]  # MLP için giriş şekli tek boyutlu
-# model = create_model(input_shape)
-#
-# # Modeli eğit
-# history = model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=10, batch_size=32)
-#
-# # Eğitim grafiği çizdirme
-# plt.plot(history.history["accuracy"], label="Train Accuracy")
-# plt.plot(history.history["val_accuracy"], label="Validation Accuracy")
-# plt.legend()
-# plt.show()
-
-# import matplotlib.pyplot as plt
-# from models.model import create_model
-# from utils.preprocess import load_data
-#
-# # Verileri yükle
-# X_train, X_test, y_train, y_test = load_data()
-#
-# # Modeli oluştur
-# model = create_model(input_shape=128*128)  # 16384 giriş
-#
-# # Modeli eğit
-# history = model.fit(
-#     X_train, y_train,
-#     validation_data=(X_test, y_test),
-#     batch_size=32,
-#     epochs=10
-# )
-#
-# # Modelin doğruluk grafiğini çiz
-# plt.plot(history.history['accuracy'], label='Eğitim Doğruluğu')
-# plt.plot(history.history['val_accuracy'], label='Doğrulama Doğruluğu')
-# plt.xlabel('Epoch')
-# plt.ylabel('Doğruluk')
-# plt.legend()
-# plt.show()
-#
-# # Modeli kaydet
-# model.save("models/brain_tumor_ann.h5")
-
